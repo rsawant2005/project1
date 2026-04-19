@@ -29,7 +29,7 @@ export function useCart() {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [cartItems, setCartItems] = useState<CartItem[]>([])
-  const { user } = useAuth()
+  const { user, authHeaders } = useAuth()
 
   // Load cart from DB when user logs in; clear when they log out
   useEffect(() => {
@@ -48,7 +48,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const restoreCartFromDB = async () => {
     try {
       // 1. Get the cart map from DB
-      const cartRes = await fetch(`${API_URL}/api/cart`, { credentials: "include" })
+      const cartRes = await fetch(`${API_URL}/api/cart`, {
+        credentials: "include",
+        headers: authHeaders(),
+      })
       if (!cartRes.ok) return
       const cartData: Record<string, number> = await cartRes.json()
 
@@ -112,7 +115,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         await fetch(`${API_URL}/api/cart`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           credentials: "include",
           body: JSON.stringify({ productId: String(item.id) }),
         })
@@ -128,6 +131,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await fetch(`${API_URL}/api/cart/${id}`, {
           method: "DELETE",
           credentials: "include",
+          headers: authHeaders(),
         })
       } catch { /* silent */ }
     }
@@ -153,7 +157,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       try {
         await fetch(`${API_URL}/api/cart`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           credentials: "include",
           body: JSON.stringify({ productId: String(id), quantity }),
         })
@@ -169,6 +173,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
         await fetch(`${API_URL}/api/cart/clear`, {
           method: "DELETE",
           credentials: "include",
+          headers: authHeaders(),
         })
       } catch { /* silent */ }
     }

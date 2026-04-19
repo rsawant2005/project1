@@ -48,7 +48,7 @@ declare global {
 export default function CheckoutPage() {
   const router = useRouter()
   const { cartItems, cartCount, clearCart } = useCart()
-  const { user, loading } = useAuth()
+  const { user, loading, authHeaders } = useAuth()
   const [paymentMethod, setPaymentMethod] = useState("cod")
   const [placing, setPlacing] = useState(false)
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -136,7 +136,7 @@ export default function CheckoutPage() {
       // Step 1: Create Razorpay order on backend
       const res = await fetch(`${API_URL}/api/payment/create-order`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         credentials: "include",
         body: JSON.stringify({ amount: total }),
       })
@@ -167,7 +167,7 @@ export default function CheckoutPage() {
           try {
             const verifyRes = await fetch(`${API_URL}/api/payment/verify`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", ...authHeaders() },
               credentials: "include",
               body: JSON.stringify({
                 razorpay_order_id: response.razorpay_order_id,
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
 
       const res = await fetch(`${API_URL}/api/orders`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         credentials: "include",
         body: JSON.stringify(orderBody),
       })

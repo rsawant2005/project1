@@ -33,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, loading, logout } = useAuth()
+  const { user, loading, logout, authHeaders } = useAuth()
   const [orders, setOrders] = useState<Order[]>([])
   const [ordersLoading, setOrdersLoading] = useState(true)
 
@@ -60,7 +60,10 @@ export default function ProfilePage() {
 
   const fetchOrders = async (isBackgroundPoll = false) => {
     try {
-      const res = await fetch(`${API_URL}/api/orders/my`, { credentials: "include" })
+      const res = await fetch(`${API_URL}/api/orders/my`, {
+        credentials: "include",
+        headers: authHeaders(),
+      })
       if (res.ok) {
         const data = await res.json()
         setOrders(data)
