@@ -53,11 +53,7 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const token = localStorage.getItem("adminToken")
-      const res = await fetch(`${API_URL}/api/orders/all`, {
-        credentials: "include",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      })
+      const res = await fetch(`${API_URL}/api/orders/all`, { credentials: "include" })
       if (res.ok) {
         const data = await res.json()
         setOrders(data)
@@ -71,13 +67,9 @@ export default function OrdersPage() {
 
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     try {
-      const token = localStorage.getItem("adminToken")
       const res = await fetch(`${API_URL}/api/orders/${orderId}/status`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ status: newStatus }),
       })

@@ -14,11 +14,11 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   token: string | null
+  authHeaders: () => Record<string, string>
   login: (email: string, password: string) => Promise<void>
   signup: (name: string, email: string, password: string, mobile: string, role: string) => Promise<void>
   googleAuth: (name: string, email: string) => Promise<void>
   logout: () => Promise<void>
-  authHeaders: () => Record<string, string>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -30,14 +30,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000"
 
-  // Helper: get auth headers for API requests
+  // Returns Authorization header using token from state or localStorage
   const authHeaders = (): Record<string, string> => {
     const t = token || (typeof window !== "undefined" ? localStorage.getItem("token") : null)
-    if (t) return { Authorization: `Bearer ${t}` }
-    return {}
+    return t ? { Authorization: `Bearer ${t}` } : {}
   }
 
-  // Helper: save token to state + localStorage
+  // Save token to both state and localStorage
   const saveToken = (t: string) => {
     setToken(t)
     if (typeof window !== "undefined") {
@@ -45,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }
 
-  // Helper: clear token from state + localStorage
+  // Clear token from both state and localStorage
   const clearToken = () => {
     setToken(null)
     if (typeof window !== "undefined") {
@@ -56,7 +55,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        // Restore token from localStorage on page load
+        // Restore token from localStorage on every page load/refresh
         const savedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null
         if (!savedToken) {
           setLoading(false)
@@ -72,7 +71,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const data = await res.json()
           setUser(data)
         } else {
-          // Token is invalid/expired, clear it
+          // Token expired or invalid — clear it
           clearToken()
           setUser(null)
         }
@@ -135,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, login, signup, googleAuth, logout, authHeaders }}>
+    <AuthContext.Provider value={{ user, loading, token, authHeaders, login, signup, googleAuth, logout }}>
       {children}
     </AuthContext.Provider>
   )

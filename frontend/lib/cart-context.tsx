@@ -94,7 +94,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const addToCart = async (item: Product) => {
     // Determine existing quantity
     const existingQuantity = cartItems.find((i) => i.id === item.id)?.quantity || 0;
-    
+
     if (item.stock !== undefined && existingQuantity + 1 > item.stock) {
       alert(`Only ${item.stock} items available in stock`);
       return;
