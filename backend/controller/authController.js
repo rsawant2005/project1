@@ -5,6 +5,15 @@ import { genToken, genToken1 } from "../config/token.js";
 import { sendOtpMail } from "../config/mail.js";
 import { sendWelcomeMail } from "../config/mail.js";
 
+// Cookie options for cross-origin deployment (frontend and backend on different domains)
+const isProduction = process.env.NODE_ENV === "production";
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProduction,           // true on HTTPS (Render), false on localhost
+  sameSite: isProduction ? "None" : "Lax",  // "None" needed for cross-origin cookies
+  maxAge: 7 * 24 * 60 * 60 * 1000,
+};
+
 
 
 
@@ -35,12 +44,7 @@ export const registration = async (req, res) => {
     sendWelcomeMail(newUser.email, newUser.name);
 
     const token = await genToken(newUser._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.status(201).json({ user: newUser, token });
   } catch (error) {
@@ -62,12 +66,7 @@ export const login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Incorrect password" });
 
     const token = await genToken(existingUser._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.status(200).json({ user: existingUser, token, message: "Login successful" });
   } catch (error) {
@@ -79,7 +78,12 @@ export const login = async (req, res) => {
 // Logout
 export const logOut = (req, res) => {
   try {
-    res.clearCookie("token");
+    // Must pass same options (except maxAge) for cross-origin cookie to be cleared
+    res.clearCookie("token", {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? "None" : "Lax",
+    });
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error.message);
@@ -101,12 +105,7 @@ export const googleLogin = async (req, res) => {
     sendWelcomeMail(existingUser.email, existingUser.name);
 
     const token = await genToken(existingUser._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "Lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
+    res.cookie("token", token, cookieOptions);
 
     res.status(200).json({ user: existingUser, token, message: "Google login successful" });
   } catch (error) {
@@ -126,10 +125,8 @@ export const adminlogin = async (req, res) => {
     if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
       let token = await genToken1(email)
       res.cookie("token", token, {
-        httpOnly: true,
-        secure: false,
-        sameSite: "Lax",
-        maxAge: 1 * 24 * 60 * 60 * 1000
+        ...cookieOptions,
+        maxAge: 1 * 24 * 60 * 60 * 1000,  // admin token: 1 day
       })
       return res.status(200).json(token)
     }
