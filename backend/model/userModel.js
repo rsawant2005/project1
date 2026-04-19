@@ -13,10 +13,31 @@ const userSchema = new mongoose.Schema({
     password:{
         type:String
     },
+    mobile:{
+        type:String,
+    },
+    role:{
+        type:String,
+        enum:['customer','delivery'],
+        default:'customer'
+    },
+
     cartData:{
         type:Object,
         default:{}
-    }
+    },
+    resetOtp: {
+    type: String,
+    default: null
+  },
+  otpExpires: {
+    type: Date,
+    default: null
+  },
+  isOtpVerified: {
+    type: Boolean,
+    default: false
+  }
 },{timestamps:true , minimize:false})
 
 const user = mongoose.model("user",userSchema)
